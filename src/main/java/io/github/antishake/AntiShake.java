@@ -43,7 +43,6 @@ public class AntiShake {
    * @param z
    */
   public void calculateTranslationVector(float x, float y, float z) {
-
     throw new NotImplementedException();
   }
 
