@@ -17,7 +17,7 @@ public class AntiShake {
   private final static Logger logger = Logger.getLogger(AntiShake.class);
 
   private static Properties properties;
-  private static double SPRING_CONSTANT;
+  static double SPRING_CONSTANT;
   private static double DAMPING_RATIO;
   private static double CIRCULAR_BUFFER_IN_SEC;
   private static double SAMPLING_RATE_IN_HZ;
@@ -38,7 +38,11 @@ public class AntiShake {
     }
   }
 
-  private AntiShake(MotionCorrectionListener listener) {
+  AntiShake(MotionCorrectionListener listener) {
+
+  }
+
+  AntiShake() {
 
   }
 
@@ -75,7 +79,7 @@ public class AntiShake {
    * @param time
    * @return impulseResponse
    */
-  private static double calculateImplulseResponse(final double time) {
+  static double calculateImplulseResponse(final double time) {
     Double impulseResponse = time * Math.exp(-(time * Math.sqrt(SPRING_CONSTANT)));
     return impulseResponse;
   }
@@ -103,7 +107,7 @@ public class AntiShake {
    * Getter for impulseResponseSamples
    * @return impulseResponseSamples
    */
-  public static ArrayList<Double> getImpulseResponseSamples() {
+  static ArrayList<Double> getImpulseResponseSamples() {
     if(impulseResponseSamples == null) {
       impulseResponseSamples = new ArrayList<Double>();
     }
