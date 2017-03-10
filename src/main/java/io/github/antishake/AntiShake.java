@@ -6,8 +6,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 import java.util.ArrayList;
+import java.util.Properties;
+import java.util.Collections;
 
 /**
  * Created by ruraj on 2/19/17.
@@ -21,7 +22,11 @@ public class AntiShake {
   private static double DAMPING_RATIO;
   private static double CIRCULAR_BUFFER_IN_SEC;
   private static double SAMPLING_RATE_IN_HZ;
+  static int NO_OF_SAMPLES;
   private static ArrayList<Double> impulseResponseSamples;
+  private static ArrayList<Double> xAccelerometerValues, yAccelerometerValues, zAccelerometerValues;
+  private static ArrayList<Double>  xResponseSamples,yResponseSamples,zResponseSamples;
+  private static int earliestAccelerometerDataIndex;
 
   // To load the config.properties when the class is loaded
   static{
@@ -84,6 +89,47 @@ public class AntiShake {
     return impulseResponse;
   }
 
+    /**
+     * Convolves impulse response of the Spring-Mass-Damper system  (H(t) = t*e(-t*sqrt(k)))
+     * with the given accelerometer input samples
+     * @return responseSamples
+     */
+    private static void convolve() {
+      ArrayList<Double> impulseResponseSamples = getImpulseResponseSamples();
+      convolve(impulseResponseSamples,getXAccelerometerValues(),getXResponseSamples());
+      convolve(impulseResponseSamples,getYAccelerometerValues(),getYResponseSamples());
+      convolve(impulseResponseSamples,getZAccelerometerValues(),getZResponseSamples());
+    }
+
+  /**
+   * Convolves impulse response of the Spring-Mass-Damper system  (H(t) = t*e(-t*sqrt(k)))
+   * with the given accelerometer input samples
+   * @param impulseResponseSamples
+   * @param accelerometerValues
+   * @param responseSamples
+   */
+  static void convolve(ArrayList<Double> impulseResponseSamples, ArrayList<Double> accelerometerValues, ArrayList<Double> responseSamples) {
+    if(impulseResponseSamples == null || accelerometerValues == null) {
+      return;
+    }
+    if(impulseResponseSamples.size() != accelerometerValues.size()) {
+      return;
+    }
+    if(responseSamples != null) {
+      responseSamples.clear();
+    }
+    int earliestAccelerometerDataIndex = getEarliestAccelerometerDataIndex(); // get index from Geo's code
+    if(earliestAccelerometerDataIndex >= NO_OF_SAMPLES) return; // index should be 0 to 200 in this testing case
+    double responseValue;
+    for(int i = 0; i < NO_OF_SAMPLES; i++) {
+      responseValue = 0;
+      for(int j = 0, k = i; j <= i; j++, k--) {
+        responseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES);
+      }
+      responseSamples.add(responseValue);
+    }
+  }
+
   /**
    * Returns the value of the given key from the config.properties file
    * @param key
@@ -101,10 +147,25 @@ public class AntiShake {
     DAMPING_RATIO = Double.parseDouble(getPropertyValue("DAMPING_RATIO"));
     CIRCULAR_BUFFER_IN_SEC = Double.parseDouble(getPropertyValue("CIRCULAR_BUFFER_IN_SEC"));
     SAMPLING_RATE_IN_HZ = Double.parseDouble(getPropertyValue("SAMPLING_RATE_IN_HZ"));
+    NO_OF_SAMPLES = (int)(CIRCULAR_BUFFER_IN_SEC * SAMPLING_RATE_IN_HZ) + 1; // Extra sample for the value at time 0
   }
 
   /**
-   * Getter for impulseResponseSamples
+   * @return earliestAccelerometerDataIndex
+   */
+  static int getEarliestAccelerometerDataIndex() {
+    earliestAccelerometerDataIndex = 0; // Get value from circular buffer
+    return earliestAccelerometerDataIndex;
+  }
+
+  /**
+   * @param earliestAccelerometerDataIndex
+   */
+  static void setEarliestAccelerometerDataIndex(int earliestAccelerometerDataIndex) {
+    AntiShake.earliestAccelerometerDataIndex = earliestAccelerometerDataIndex;
+  }
+
+  /**
    * @return impulseResponseSamples
    */
   static ArrayList<Double> getImpulseResponseSamples() {
@@ -113,4 +174,71 @@ public class AntiShake {
     }
     return impulseResponseSamples;
   }
+
+  /**
+   * @return xAccelerometerValues
+   */
+  static ArrayList<Double> getXAccelerometerValues() {
+    if(xAccelerometerValues == null) {
+      xAccelerometerValues = new ArrayList<Double>(NO_OF_SAMPLES);
+      Collections.fill(xAccelerometerValues, 0d);
+    }
+    return xAccelerometerValues;
+  }
+
+  /**
+   * @return yAccelerometerValues
+   */
+  static ArrayList<Double> getYAccelerometerValues() {
+    if(yAccelerometerValues == null) {
+      yAccelerometerValues = new ArrayList<Double>(NO_OF_SAMPLES);
+      Collections.fill(yAccelerometerValues, 0d);
+    }
+    return yAccelerometerValues;
+  }
+
+  /**
+   * @return zAccelerometerValues
+   */
+  static ArrayList<Double> getZAccelerometerValues() {
+    if(zAccelerometerValues == null) {
+      zAccelerometerValues = new ArrayList<Double>(NO_OF_SAMPLES);
+      Collections.fill(zAccelerometerValues, 0d);
+    }
+    return zAccelerometerValues;
+  }
+
+  /**
+   * @return xResponseSamples
+   */
+  static ArrayList<Double> getXResponseSamples() {
+    if(xResponseSamples == null) {
+      xResponseSamples = new ArrayList<Double>(NO_OF_SAMPLES);
+      Collections.fill(xResponseSamples, 0d);
+    }
+    return xResponseSamples;
+  }
+
+  /**
+   * @return  yResponseSamples
+   */
+  static ArrayList<Double> getYResponseSamples() {
+    if(yResponseSamples == null) {
+      yResponseSamples = new ArrayList<Double>(NO_OF_SAMPLES);
+      Collections.fill(yResponseSamples, 0d);
+    }
+    return yResponseSamples;
+  }
+
+  /**
+   * @return  zResponseSamples
+   */
+  static ArrayList<Double> getZResponseSamples() {
+    if(zResponseSamples == null) {
+      zResponseSamples = new ArrayList<Double>(NO_OF_SAMPLES);
+      Collections.fill(zResponseSamples, 0d);
+    }
+    return zResponseSamples;
+  }
+
 }
