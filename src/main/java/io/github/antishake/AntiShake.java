@@ -45,6 +45,48 @@ public class AntiShake {
   AntiShake() {
 
   }
+    /**
+     * Checks whether the device is shaking or not
+     * by comparing the sum of the values from accelerometer by the empirically determined threshold
+     */
+    public void isShaking() {
+
+        {
+            {
+                int i;
+                double threshold = 0;
+
+                double[] inputArray = new double[200];
+                for (i = 0; i < inputArray.length; i++) {
+                    inputArray[i] = i;
+                }
+
+                for (i = 0; i < inputArray.length; i++) {
+                    double NewValue = 0;
+                    int j = i;
+                    int count = 0;
+                    while (count < 90) {
+
+                        if (j < 0) {
+                            j = 199;
+                        }
+                        NewValue = NewValue + inputArray[j];
+
+                        j--;
+                        count++;
+                        inputArray[i] = NewValue;
+
+                        if (NewValue > threshold) {
+                            System.out.println("Shake Detected");
+                        } else {
+                            System.out.println("NoShake detected");
+
+                        }
+                    }
+                }
+            }
+        }
+    }
 
   /**
    * Calculates the next motion correction using accelerometer reading

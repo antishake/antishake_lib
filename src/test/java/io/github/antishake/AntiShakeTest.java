@@ -20,8 +20,8 @@ public class AntiShakeTest implements MotionCorrectionListener {
 
   @Test
   public void testIsShaking() {
-  }
-
+    antiShakeImpl.isShaking();
+}
   @Test
   public void isConvolve() {
   }
