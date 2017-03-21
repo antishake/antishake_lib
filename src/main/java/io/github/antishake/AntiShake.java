@@ -17,6 +17,7 @@ public class AntiShake {
   private final static Logger logger = Logger.getLogger(AntiShake.class);
 
   private static Properties properties;
+  private static  List<Double> circularbuffer = new ArrayList<Double>(201);
   static double SPRING_CONSTANT;
   private static double DAMPING_RATIO;
   private static double CIRCULAR_BUFFER_IN_SEC;
@@ -114,3 +115,12 @@ public class AntiShake {
     return impulseResponseSamples;
   }
 }
+
+/**
+ * TO add values in to the circular buffer
+ */
+ public static Arraylist<Double> addciruclar(Arraylist cirularbuffer){
+
+     return  circularbuffer;
+
+ }
