@@ -165,15 +165,17 @@ public class AntiShake {
 
 //Circular buffer to store and retrieve the accelerometer values
 
-public int read,rear=0;                       // read pointer
-public int size_buffer =201;
-double[] circularbuffer =new double[size_buffer]; //initialized circular buffer using array list
+
+    public int read,rear=0;                       // read pointer
+    public int size_buffer =201;
+    double[] circularbuffer =new double[size_buffer]; //initialized circular buffer using array list
 
 
 
     public boolean isEmpty(){
         return read==rear;
     }
+    //To add elements into the buffer
     public void add(double x){
         int s=size();
         if(s==size_buffer-1){
@@ -187,6 +189,7 @@ double[] circularbuffer =new double[size_buffer]; //initialized circular buffer 
     public int size(){
         return(size_buffer-read+rear)%size_buffer;
     }
+    //To remove the elements from the buffer
     public Double remove(){
         if(isEmpty()){
             return null;
@@ -198,6 +201,17 @@ double[] circularbuffer =new double[size_buffer]; //initialized circular buffer 
         return x;
 
     }
+    // To print all the elements in the circular_buffer
+    public void print_elements(){
+        if(!isEmpty()){
+            System.out.println(Arrays.toString(circularbuffer));
+        }
+        if(isEmpty()){
+            System.out.println("Circular buffer is empty ");
+
+        }
+    }
+    //To change the size of the buffer
     private void resize(){
         int s=size();
         size_buffer=2*size_buffer;
