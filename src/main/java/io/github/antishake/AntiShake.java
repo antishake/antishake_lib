@@ -198,6 +198,7 @@ double[] circularbuffer =new double[size_buffer]; //initialized circular buffer 
         return x;
 
     }
+//to change the limit of the circularbuffer
     private void resize(){
         int s=size();
         size_buffer=2*size_buffer;
