@@ -48,35 +48,40 @@ public class AntiShake {
     /**
      * Checks whether the device is shaking or not
      * by comparing the sum of the values from accelerometer by the empirically determined threshold
-     */
+     *
+     **/
+
     public void isShaking() {
 
         {
             {
                 int i;
-                double threshold = 0;
+               //For now defining threshold with a dummy value that is 0.5
+                double threshold = 0.5 ;
 
                 double[] inputArray = new double[200];
                 for (i = 0; i < inputArray.length; i++) {
                     inputArray[i] = i;
                 }
+                //For now taking the dummy value for read pointer until the circular buffer is ready to implement
+                int readPointer = 5;
+                double newValue = 0;
+                readPointer = i;
+                int count = 0;
+                for (i = readPointer; i < inputArray.length; i++) {
 
-                for (i = 0; i < inputArray.length; i++) {
-                    double NewValue = 0;
-                    int j = i;
-                    int count = 0;
                     while (count < 90) {
 
-                        if (j < 0) {
-                            j = 199;
+                        if (readPointer < 0) {
+                            readPointer = 199;
                         }
-                        NewValue = NewValue + inputArray[j];
+                        newValue = newValue + inputArray[readPointer] ;
 
-                        j--;
+                        readPointer--;
                         count++;
-                        inputArray[i] = NewValue;
+                        inputArray[i] = newValue;
 
-                        if (NewValue > threshold) {
+                        if (newValue > threshold) {
                             System.out.println("Shake Detected");
                         } else {
                             System.out.println("NoShake detected");
