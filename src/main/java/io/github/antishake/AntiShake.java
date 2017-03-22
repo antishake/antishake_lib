@@ -24,8 +24,8 @@ public class AntiShake {
   private static double SAMPLING_RATE_IN_HZ;
   static int NO_OF_SAMPLES;
   private static ArrayList<Double> impulseResponseSamples;
-  private static ArrayList<Double> xAccelerometerValues, yAccelerometerValues, zAccelerometerValues;
-  private static ArrayList<Double>  xResponseSamples,yResponseSamples,zResponseSamples;
+  private static ArrayList<Coordinate> accelerometerValues;
+  private static ArrayList<Coordinate>  responseSamples;
   private static int earliestAccelerometerDataIndex;
 
   // To load the config.properties when the class is loaded
@@ -49,16 +49,6 @@ public class AntiShake {
 
   AntiShake() {
 
-  }
-
-  /**
-   * Calculates the next motion correction using accelerometer reading
-   * @param x
-   * @param y
-   * @param z
-   */
-  public void calculateTranslationVector(float x, float y, float z) {
-    throw new NotImplementedException();
   }
 
   /**
@@ -89,17 +79,15 @@ public class AntiShake {
     return impulseResponse;
   }
 
-    /**
-     * Convolves impulse response of the Spring-Mass-Damper system  (H(t) = t*e(-t*sqrt(k)))
-     * with the given accelerometer input samples
-     * @return responseSamples
-     */
-    private static void convolve() {
-      ArrayList<Double> impulseResponseSamples = getImpulseResponseSamples();
-      convolve(impulseResponseSamples,getXAccelerometerValues(),getXResponseSamples());
-      convolve(impulseResponseSamples,getYAccelerometerValues(),getYResponseSamples());
-      convolve(impulseResponseSamples,getZAccelerometerValues(),getZResponseSamples());
-    }
+  /**
+   * Convolves impulse response of the Spring-Mass-Damper system  (H(t) = t*e(-t*sqrt(k)))
+   * with the given accelerometer input samples
+   * @return responseSamples
+   */
+  private static void calculateTransformationVector() {
+    ArrayList<Double> impulseResponseSamples = getImpulseResponseSamples();
+    calculateTransformationVector(impulseResponseSamples,getAccelerometerValues(),getResponseSamples());
+  }
 
   /**
    * Convolves impulse response of the Spring-Mass-Damper system  (H(t) = t*e(-t*sqrt(k)))
@@ -108,7 +96,7 @@ public class AntiShake {
    * @param accelerometerValues
    * @param responseSamples
    */
-  static void convolve(ArrayList<Double> impulseResponseSamples, ArrayList<Double> accelerometerValues, ArrayList<Double> responseSamples) {
+  static void calculateTransformationVector(ArrayList<Double> impulseResponseSamples, ArrayList<Coordinate> accelerometerValues, ArrayList<Coordinate> responseSamples) {
     if(impulseResponseSamples == null || accelerometerValues == null) {
       return;
     }
@@ -120,13 +108,20 @@ public class AntiShake {
     }
     int earliestAccelerometerDataIndex = getEarliestAccelerometerDataIndex(); // get index from Geo's code
     if(earliestAccelerometerDataIndex >= NO_OF_SAMPLES) return; // index should be 0 to 200 in this testing case
-    double responseValue;
+
+    double xResponseValue,yResponseValue,zResponseValue;
+
     for(int i = 0; i < NO_OF_SAMPLES; i++) {
-      responseValue = 0;
+      xResponseValue = 0;
+      yResponseValue = 0;
+      zResponseValue = 0;
+
       for(int j = 0, k = i; j <= i; j++, k--) {
-        responseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES);
+        xResponseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES).getX();
+        yResponseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES).getY();
+        zResponseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES).getZ();
       }
-      responseSamples.add(responseValue);
+      responseSamples.add(new Coordinate(xResponseValue, yResponseValue, zResponseValue));
     }
   }
 
@@ -159,10 +154,10 @@ public class AntiShake {
   }
 
   /**
-   * @param earliestAccelerometerDataIndex
+   * @param earliestAccelerometerDataIndex1
    */
-  static void setEarliestAccelerometerDataIndex(int earliestAccelerometerDataIndex) {
-    AntiShake.earliestAccelerometerDataIndex = earliestAccelerometerDataIndex;
+  static void setEarliestAccelerometerDataIndex(int earliestAccelerometerDataIndex1) {
+    earliestAccelerometerDataIndex = earliestAccelerometerDataIndex1;
   }
 
   /**
@@ -176,69 +171,22 @@ public class AntiShake {
   }
 
   /**
-   * @return xAccelerometerValues
+   * @return accelerometerValues
    */
-  static ArrayList<Double> getXAccelerometerValues() {
-    if(xAccelerometerValues == null) {
-      xAccelerometerValues = new ArrayList<Double>(NO_OF_SAMPLES);
-      Collections.fill(xAccelerometerValues, 0d);
+  static ArrayList<Coordinate> getAccelerometerValues() {
+    if(accelerometerValues == null) {
+      accelerometerValues = new ArrayList<Coordinate>(NO_OF_SAMPLES);
     }
-    return xAccelerometerValues;
+    return accelerometerValues;
   }
 
   /**
-   * @return yAccelerometerValues
+   * @return responseSamples
    */
-  static ArrayList<Double> getYAccelerometerValues() {
-    if(yAccelerometerValues == null) {
-      yAccelerometerValues = new ArrayList<Double>(NO_OF_SAMPLES);
-      Collections.fill(yAccelerometerValues, 0d);
+  static ArrayList<Coordinate> getResponseSamples() {
+    if(responseSamples == null) {
+      responseSamples = new ArrayList<Coordinate>(NO_OF_SAMPLES);
     }
-    return yAccelerometerValues;
+    return responseSamples;
   }
-
-  /**
-   * @return zAccelerometerValues
-   */
-  static ArrayList<Double> getZAccelerometerValues() {
-    if(zAccelerometerValues == null) {
-      zAccelerometerValues = new ArrayList<Double>(NO_OF_SAMPLES);
-      Collections.fill(zAccelerometerValues, 0d);
-    }
-    return zAccelerometerValues;
-  }
-
-  /**
-   * @return xResponseSamples
-   */
-  static ArrayList<Double> getXResponseSamples() {
-    if(xResponseSamples == null) {
-      xResponseSamples = new ArrayList<Double>(NO_OF_SAMPLES);
-      Collections.fill(xResponseSamples, 0d);
-    }
-    return xResponseSamples;
-  }
-
-  /**
-   * @return  yResponseSamples
-   */
-  static ArrayList<Double> getYResponseSamples() {
-    if(yResponseSamples == null) {
-      yResponseSamples = new ArrayList<Double>(NO_OF_SAMPLES);
-      Collections.fill(yResponseSamples, 0d);
-    }
-    return yResponseSamples;
-  }
-
-  /**
-   * @return  zResponseSamples
-   */
-  static ArrayList<Double> getZResponseSamples() {
-    if(zResponseSamples == null) {
-      zResponseSamples = new ArrayList<Double>(NO_OF_SAMPLES);
-      Collections.fill(zResponseSamples, 0d);
-    }
-    return zResponseSamples;
-  }
-
 }
