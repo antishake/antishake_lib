@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Created by ruraj on 2/19/17.
@@ -161,3 +162,57 @@ public class AntiShake {
     return impulseResponseSamples;
   }
 }
+
+//Circular buffer to store and retrieve the accelerometer values
+
+public int read,rear=0;                       // read pointer
+public int size_buffer =201;
+double[] circularbuffer =new double[size_buffer]; //initialized circular buffer using array list
+
+
+
+    public boolean isEmpty(){
+        return read==rear;
+    }
+    public void add(double x){
+        int s=size();
+        if(s==size_buffer-1){
+            resize();
+        }
+        circularbuffer[rear++]=x;
+        if(rear==size_buffer){
+            rear=0;
+        }
+    }
+    public int size(){
+        return(size_buffer-read+rear)%size_buffer;
+    }
+    public Double remove(){
+        if(isEmpty()){
+            return null;
+        }
+        double x= circularbuffer[read++];
+        if(read==size_buffer){
+            read=0;
+        }
+        return x;
+
+    }
+    private void resize(){
+        int s=size();
+        size_buffer=2*size_buffer;
+        int lastindex=s+1;
+        double [] new_circularbuffer=new double[size_buffer];
+        int i=0;
+        while(s>0){
+            s--;
+            new_circularbuffer[i++]=new_circularbuffer[read++];
+        }
+        if(read==lastindex){
+            read=0;
+
+        }
+        rear=i++;
+        read=0;
+        circularbuffer= new_circularbuffer;
+    }
