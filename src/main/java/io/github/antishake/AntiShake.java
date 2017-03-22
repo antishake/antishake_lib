@@ -25,11 +25,11 @@ public class AntiShake {
   static int NO_OF_SAMPLES;
   private static ArrayList<Double> impulseResponseSamples;
   private static ArrayList<Coordinate> accelerometerValues;
-  private static ArrayList<Coordinate>  responseSamples;
+  private static ArrayList<Coordinate> responseSamples;
   private static int earliestAccelerometerDataIndex;
 
   // To load the config.properties when the class is loaded
-  static{
+  static {
     InputStream is = null;
     try {
       properties = new Properties();
@@ -66,11 +66,12 @@ public class AntiShake {
       impulseResponseSamples.add(calculateImplulseResponse(intervalInSeconds));
       i++;
     } while (intervalInSeconds < CIRCULAR_BUFFER_IN_SEC);
-   }
+  }
 
   /**
    * Calculates impulse response of the Spring-Mass-Damper system (H(t) = t*e(-t*sqrt(k)))
    * for the given time
+   *
    * @param time
    * @return impulseResponse
    */
@@ -82,41 +83,43 @@ public class AntiShake {
   /**
    * Convolves impulse response of the Spring-Mass-Damper system  (H(t) = t*e(-t*sqrt(k)))
    * with the given accelerometer input samples
+   *
    * @return responseSamples
    */
   private static void calculateTransformationVector() {
     ArrayList<Double> impulseResponseSamples = getImpulseResponseSamples();
-    calculateTransformationVector(impulseResponseSamples,getAccelerometerValues(),getResponseSamples());
+    calculateTransformationVector(impulseResponseSamples, getAccelerometerValues(), getResponseSamples());
   }
 
   /**
    * Convolves impulse response of the Spring-Mass-Damper system  (H(t) = t*e(-t*sqrt(k)))
    * with the given accelerometer input samples
+   *
    * @param impulseResponseSamples
    * @param accelerometerValues
    * @param responseSamples
    */
   static void calculateTransformationVector(ArrayList<Double> impulseResponseSamples, ArrayList<Coordinate> accelerometerValues, ArrayList<Coordinate> responseSamples) {
-    if(impulseResponseSamples == null || accelerometerValues == null) {
+    if (impulseResponseSamples == null || accelerometerValues == null) {
       return;
     }
-    if(impulseResponseSamples.size() != accelerometerValues.size()) {
+    if (impulseResponseSamples.size() != accelerometerValues.size()) {
       return;
     }
-    if(responseSamples != null) {
+    if (responseSamples != null) {
       responseSamples.clear();
     }
     int earliestAccelerometerDataIndex = getEarliestAccelerometerDataIndex(); // get index from Geo's code
-    if(earliestAccelerometerDataIndex >= NO_OF_SAMPLES) return; // index should be 0 to 200 in this testing case
+    if (earliestAccelerometerDataIndex >= NO_OF_SAMPLES) return; // index should be 0 to 200 in this testing case
 
-    double xResponseValue,yResponseValue,zResponseValue;
+    double xResponseValue, yResponseValue, zResponseValue;
 
-    for(int i = 0; i < NO_OF_SAMPLES; i++) {
+    for (int i = 0; i < NO_OF_SAMPLES; i++) {
       xResponseValue = 0;
       yResponseValue = 0;
       zResponseValue = 0;
 
-      for(int j = 0, k = i; j <= i; j++, k--) {
+      for (int j = 0, k = i; j <= i; j++, k--) {
         xResponseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES).getX();
         yResponseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES).getY();
         zResponseValue += impulseResponseSamples.get(j) * accelerometerValues.get((earliestAccelerometerDataIndex + k) % NO_OF_SAMPLES).getZ();
@@ -127,10 +130,11 @@ public class AntiShake {
 
   /**
    * Returns the value of the given key from the config.properties file
+   *
    * @param key
    * @return value
    */
-  private static String getPropertyValue(String key){
+  private static String getPropertyValue(String key) {
     return properties.getProperty(key);
   }
 
@@ -142,7 +146,7 @@ public class AntiShake {
     DAMPING_RATIO = Double.parseDouble(getPropertyValue("DAMPING_RATIO"));
     CIRCULAR_BUFFER_IN_SEC = Double.parseDouble(getPropertyValue("CIRCULAR_BUFFER_IN_SEC"));
     SAMPLING_RATE_IN_HZ = Double.parseDouble(getPropertyValue("SAMPLING_RATE_IN_HZ"));
-    NO_OF_SAMPLES = (int)(CIRCULAR_BUFFER_IN_SEC * SAMPLING_RATE_IN_HZ) + 1; // Extra sample for the value at time 0
+    NO_OF_SAMPLES = (int) (CIRCULAR_BUFFER_IN_SEC * SAMPLING_RATE_IN_HZ) + 1; // Extra sample for the value at time 0
   }
 
   /**
@@ -164,7 +168,7 @@ public class AntiShake {
    * @return impulseResponseSamples
    */
   static ArrayList<Double> getImpulseResponseSamples() {
-    if(impulseResponseSamples == null) {
+    if (impulseResponseSamples == null) {
       impulseResponseSamples = new ArrayList<Double>();
     }
     return impulseResponseSamples;
@@ -174,7 +178,7 @@ public class AntiShake {
    * @return accelerometerValues
    */
   static ArrayList<Coordinate> getAccelerometerValues() {
-    if(accelerometerValues == null) {
+    if (accelerometerValues == null) {
       accelerometerValues = new ArrayList<Coordinate>(NO_OF_SAMPLES);
     }
     return accelerometerValues;
@@ -184,7 +188,7 @@ public class AntiShake {
    * @return responseSamples
    */
   static ArrayList<Coordinate> getResponseSamples() {
-    if(responseSamples == null) {
+    if (responseSamples == null) {
       responseSamples = new ArrayList<Coordinate>(NO_OF_SAMPLES);
     }
     return responseSamples;

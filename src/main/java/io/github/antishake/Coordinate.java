@@ -39,14 +39,14 @@ public class Coordinate {
   }
 
   @Override
-  public boolean equals(Object o){
-    if(o == null)                return false;
-    if(!(o instanceof Coordinate)) return false;
+  public boolean equals(Object o) {
+    if (o == null) return false;
+    if (!(o instanceof Coordinate)) return false;
 
     Coordinate other = (Coordinate) o;
-    if(this.getX() != other.getX())      return false;
-    if(this.getY() != other.getY())      return false;
-    if(this.getZ() != other.getZ())      return false;
+    if (this.getX() != other.getX()) return false;
+    if (this.getY() != other.getY()) return false;
+    if (this.getZ() != other.getZ()) return false;
 
     return true;
   }
