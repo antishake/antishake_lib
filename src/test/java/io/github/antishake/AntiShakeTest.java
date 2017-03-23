@@ -56,7 +56,7 @@ public class AntiShakeTest implements MotionCorrectionListener {
 
   @Test
   public void testCalculateTransformationVector() {
-//    AntiShake.NO_OF_SAMPLES = 7;
+    AntiShake.NO_OF_SAMPLES = 7;
     ArrayList<Double> impulseResponseSamples = new ArrayList<Double>();
     ArrayList<Coordinate> accelerometerValues = new ArrayList<Coordinate>();
     ArrayList<Coordinate> testResponseSamples = new ArrayList<Coordinate>();
