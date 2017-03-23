@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Collections;
 
@@ -23,10 +24,14 @@ public class AntiShake {
   private static double CIRCULAR_BUFFER_IN_SEC;
   private static double SAMPLING_RATE_IN_HZ;
   static int NO_OF_SAMPLES;
+  static double SHAKE_DETECTION_THRESHOLD;
+  private static double SHAKE_DETECTION_CHECK_TIME_IN_SEC;
+  static int NO_OF_SAMPLES_SHAKE_DETECTION;
   private static ArrayList<Double> impulseResponseSamples;
   private static ArrayList<Coordinate> accelerometerValues;
   private static ArrayList<Coordinate> responseSamples;
-  private static int earliestAccelerometerDataIndex;
+  private static int earliestAccelerometerDataIndex, latestAccelerometerDataIndex;
+  //private CircularBuffer circularBuffer; // To use Circular buffer once pushed
 
   // To load the config.properties when the class is loaded
   static {
@@ -44,59 +49,61 @@ public class AntiShake {
   }
 
   AntiShake(MotionCorrectionListener listener) {
-
+//create CircularBuffer object
   }
 
   AntiShake() {
 
   }
-    /**
-     * Checks whether the device is shaking or not
-     * by comparing the sum of the values from accelerometer by the empirically determined threshold
-     *
-     **/
 
-    public void isShaking() {
+  /**
+   * @return true if shaking is detected in the device
+   * false if there is no shaking
+   */
+  private boolean isShaking() {
+    return isShaking(getAccelerometerValues());
+  }
 
-        {
-            {
-                int i;
-               //For now defining threshold with a dummy value that is 0.5
-                double threshold = 0.5 ;
+  /**
+   * @param accelerometerValues
+   * @return true if shaking is detected in the device
+   * false if there is no shaking
+   * <p>
+   * Takes {@link AntiShake#NO_OF_SAMPLES_SHAKE_DETECTION} number of samples from the argument ArrayList accelerometerValues and
+   * aggregates them. Compares the aggregated values of each axis against the {@link AntiShake#SHAKE_DETECTION_THRESHOLD}
+   * to detect shaking. If the aggregated values of either of the axis is greater than the {@link AntiShake#SHAKE_DETECTION_THRESHOLD},
+   * then the shaking is detected.
+   */
+  boolean isShaking(ArrayList<Coordinate> accelerometerValues) {
+    boolean shakeDetected = false;
+    if (accelerometerValues.isEmpty()) return shakeDetected;
 
-                double[] inputArray = new double[200];
-                for (i = 0; i < inputArray.length; i++) {
-                    inputArray[i] = i;
-                }
-                //For now taking the dummy value for read pointer until the circular buffer is ready to implement
-                int readPointer = 5;
-                double newValue = 0;
-                readPointer = i;
-                int count = 0;
-                for (i = readPointer; i < inputArray.length; i++) {
+    int latestAccelerometerDataIndex = getLatestAccelerometerDataIndex();
+    int tempLatestAccelerometerDataIndex = latestAccelerometerDataIndex;
+    Coordinate accelerometerValue;
+    double aggregateX = 0, aggregateY = 0, aggregateZ = 0;
+    for (int i = 0; i < NO_OF_SAMPLES_SHAKE_DETECTION; i++) {
+      accelerometerValue = accelerometerValues.get(tempLatestAccelerometerDataIndex);
+      aggregateX += accelerometerValue.getX();
+      aggregateY += accelerometerValue.getY();
+      aggregateZ += accelerometerValue.getZ();
+      if (aggregateX > SHAKE_DETECTION_THRESHOLD || aggregateY > SHAKE_DETECTION_THRESHOLD || aggregateZ > SHAKE_DETECTION_THRESHOLD) {
+        shakeDetected = true;
+        break;
+      }
+      tempLatestAccelerometerDataIndex--;
 
-                    while (count < 90) {
-
-                        if (readPointer < 0) {
-                            readPointer = 199;
-                        }
-                        newValue = newValue + inputArray[readPointer] ;
-
-                        readPointer--;
-                        count++;
-                        inputArray[i] = newValue;
-
-                        if (newValue > threshold) {
-                            System.out.println("Shake Detected");
-                        } else {
-                            System.out.println("NoShake detected");
-
-                        }
-                    }
-                }
-            }
-        }
+      // If the index goes below 0, set it to the last index of the array and stop processing when it again reaches the
+      // latestAccelerometerDataIndex where we started
+      if (tempLatestAccelerometerDataIndex < 0) {
+        tempLatestAccelerometerDataIndex = accelerometerValues.size() - 1;
+      }
+      if (tempLatestAccelerometerDataIndex == latestAccelerometerDataIndex) {
+        break;
+      }
     }
+    return shakeDetected;
+  }
 
   /**
    * Calculates the impulse response of the Spring-Mass-Damper system
@@ -150,12 +157,12 @@ public class AntiShake {
     if (impulseResponseSamples == null || accelerometerValues == null) {
       return;
     }
-    if (impulseResponseSamples.size() != accelerometerValues.size()) {
+    if (accelerometerValues.isEmpty() || impulseResponseSamples.size() != accelerometerValues.size()) {
       return;
     }
-    if (responseSamples != null) {
-      responseSamples.clear();
-    }
+
+    responseSamples.clear();
+
     int earliestAccelerometerDataIndex = getEarliestAccelerometerDataIndex(); // get index from Geo's code
     if (earliestAccelerometerDataIndex >= NO_OF_SAMPLES) return; // index should be 0 to 200 in this testing case
 
@@ -194,6 +201,9 @@ public class AntiShake {
     CIRCULAR_BUFFER_IN_SEC = Double.parseDouble(getPropertyValue("CIRCULAR_BUFFER_IN_SEC"));
     SAMPLING_RATE_IN_HZ = Double.parseDouble(getPropertyValue("SAMPLING_RATE_IN_HZ"));
     NO_OF_SAMPLES = (int) (CIRCULAR_BUFFER_IN_SEC * SAMPLING_RATE_IN_HZ) + 1; // Extra sample for the value at time 0
+    SHAKE_DETECTION_THRESHOLD = Double.parseDouble(getPropertyValue("SHAKE_DETECTION_THRESHOLD"));
+    SHAKE_DETECTION_CHECK_TIME_IN_SEC = Double.parseDouble(getPropertyValue("SHAKE_DETECTION_CHECK_TIME_IN_SEC"));
+    NO_OF_SAMPLES_SHAKE_DETECTION = (int) (SHAKE_DETECTION_CHECK_TIME_IN_SEC * SAMPLING_RATE_IN_HZ);
   }
 
   /**
@@ -201,6 +211,7 @@ public class AntiShake {
    */
   static int getEarliestAccelerometerDataIndex() {
     earliestAccelerometerDataIndex = 0; // Get value from circular buffer
+//    earliestAccelerometerDataIndex = getCircularBuffer().getReadPointer();
     return earliestAccelerometerDataIndex;
   }
 
@@ -225,8 +236,10 @@ public class AntiShake {
    * @return accelerometerValues
    */
   static ArrayList<Coordinate> getAccelerometerValues() {
+    // Need to uncomment the below line once circular buffer data is pushed
+    // accelerometerValues = (ArrayList<Coordinate>) Arrays.asList(getCircularBuffer().getElements());
     if (accelerometerValues == null) {
-      accelerometerValues = new ArrayList<Coordinate>(NO_OF_SAMPLES);
+      accelerometerValues = new ArrayList<Coordinate>();
     }
     return accelerometerValues;
   }
@@ -240,5 +253,35 @@ public class AntiShake {
     }
     return responseSamples;
   }
+
+  /**
+   * @return latestAccelerometerDataIndex
+   */
+  public static int getLatestAccelerometerDataIndex() {
+    latestAccelerometerDataIndex = 0; // Get write pointer value from circular buffer
+//  latestAccelerometerDataIndex = getCircularBuffer().getWritePointer();
+    return latestAccelerometerDataIndex;
+  }
+
+  /**
+   * @param latestAccelerometerDataIndex1
+   */
+  public static void setLatestAccelerometerDataIndex(int latestAccelerometerDataIndex1) {
+    latestAccelerometerDataIndex = latestAccelerometerDataIndex1;
+  }
+
+  /**
+   * @return circularBuffer
+   */
+  /* public CircularBuffer getCircularBuffer() {
+    return circularBuffer;
+  }
+*/
+  /**
+   * @param circularBuffer
+   */
+  /* public void setCircularBuffer(CircularBuffer circularBuffer) {
+    this.circularBuffer = circularBuffer;
+  }*/
 }
 
