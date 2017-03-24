@@ -23,7 +23,39 @@ public class AntiShakeTest implements MotionCorrectionListener {
 
   @Test
   public void testIsShaking() {
+
     antiShakeImpl.isShaking();
+
+    AntiShake.SHAKE_DETECTION_THRESHOLD = 10;
+    ArrayList<Coordinate> accelerometerValues = new ArrayList<Coordinate>();
+    Coordinate[] accelerometerArrayShake = new Coordinate[]{
+      new Coordinate(3d, 3d, 1d),
+      new Coordinate(2d, 2d, 2d),
+      new Coordinate(1d, 1d, 1d),
+      new Coordinate(0d, 6d, 0d),
+      new Coordinate(0d, 1d, 0d),
+      new Coordinate(0d, 0d, 0d),
+      new Coordinate(0d, 0d, 0d)
+    };
+    accelerometerValues.addAll(Arrays.asList(accelerometerArrayShake));
+    // aggregateX = 6d, aggregateY = 13d, aggregateZ = 4d - should give true for shaking as it is greater than threshold
+    boolean isShaking = antiShakeImpl.isShaking(accelerometerValues);
+    Assert.assertTrue(isShaking);
+    Coordinate[] accelerometerArrayNoShake = new Coordinate[]{
+      new Coordinate(3d, 3d, 1d),
+      new Coordinate(2d, 2d, 2d),
+      new Coordinate(1d, 1d, 1d),
+      new Coordinate(0d, 0d, 0d),
+      new Coordinate(0d, 1d, 0d),
+      new Coordinate(0d, 0d, 0d),
+      new Coordinate(0d, 0d, 0d)
+    };
+    accelerometerValues.clear();
+    accelerometerValues.addAll(Arrays.asList(accelerometerArrayNoShake));
+    // aggregateX = 6d, aggregateY = 7d, aggregateZ = 4d - should give false for shaking as either of the axis is greater than threshold
+    isShaking = antiShakeImpl.isShaking(accelerometerValues);
+    Assert.assertFalse(isShaking);
+
   }
 
   @Test

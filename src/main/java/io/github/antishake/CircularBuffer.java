@@ -11,8 +11,8 @@ package io.github.antishake;
  */
 public class CircularBuffer {
   private int readPointer, writePointer = 0;
-  private int sizeBuffer = 201;
-  private Coordinate[] circularbuffer = new Coordinate[sizeBuffer];
+  private int sizeBuffer ;
+  private Coordinate[] circularbuffer;
   private boolean bufferFullOnce = false;
 
   public CircularBuffer(int size) {
@@ -31,7 +31,7 @@ public class CircularBuffer {
         circularbuffer[writePointer] = element;
         writePointer++;
       }
-      if (bufferFullOnce) {
+      else {
         circularbuffer[readPointer] = element;
         writePointer++;
         readPointer++;
