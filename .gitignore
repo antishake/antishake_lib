@@ -13,6 +13,8 @@ bin/
 gen/
 out/
 target/
+.classpath
+.project
 
 # Gradle files
 .gradle/
