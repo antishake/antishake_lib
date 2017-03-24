@@ -15,35 +15,38 @@ public class CircularBuffer {
   private Coordinate[] circularbuffer = new Coordinate[sizeBuffer];
   private boolean bufferFullOnce = false;
 
+  public CircularBuffer(int size) {
+    sizeBuffer = size;
+    circularbuffer = new Coordinate[sizeBuffer];
+  }
+
+
   public boolean isEmpty() {
     return readPointer == writePointer;
   }
 
   public void add(Coordinate element) {
-    if (readPointer < sizeBuffer) {
+    if (writePointer < sizeBuffer) {
       if (!bufferFullOnce) {
-        circularbuffer[readPointer] = element;
-        readPointer++;
+        circularbuffer[writePointer] = element;
+        writePointer++;
       }
       if (bufferFullOnce) {
         circularbuffer[readPointer] = element;
-        readPointer++;
         writePointer++;
+        readPointer++;
       }
     } else {
-      readPointer = 0;
-      circularbuffer[readPointer] = element;
-      readPointer++;
+      writePointer = 0;
+      circularbuffer[writePointer] = element;
+      writePointer++;
+      readPointer=readPointer+2;
       bufferFullOnce = true;
     }
   }
 
   public Coordinate[] get_elements() {
-    if (!isEmpty()) {
-      return circularbuffer;
-    }
     return circularbuffer;
-
   }
 
   public int getReadPointer() {

@@ -24,7 +24,8 @@ public class AntiShakeTest implements MotionCorrectionListener {
   @Test
   public void testIsShaking() {
     antiShakeImpl.isShaking();
-}
+  }
+
   @Test
   public void testCalculateTransformationVector() {
     AntiShake.NO_OF_SAMPLES = 7;
@@ -69,6 +70,22 @@ public class AntiShakeTest implements MotionCorrectionListener {
     testResponseSamples.addAll(Arrays.asList(testResponseArray));
     antiShakeImpl.calculateTransformationVector(impulseResponseSamples, accelerometerValues, responseSamples);
     Assert.assertEquals(testResponseSamples, responseSamples);
+  }
+
+  @Test
+  public void testCircularBuffer() {
+    CircularBuffer cb = new CircularBuffer(201);
+    Coordinate element = new Coordinate(2, 5, 7);
+    cb.add(element);
+    Assert.assertEquals(1, cb.getWritePointer());
+    Assert.assertEquals(0, cb.getReadPointer());
+    //when the buffer execeds 201 values it should return to initial poisition of the block and  should start from there read pointer should move according to write pointer
+    for(int i=0;i<356;i++){
+      cb.add(element);
+    }
+    Assert.assertEquals(156, cb.getWritePointer());
+    Assert.assertEquals(157,cb.getReadPointer());
+
   }
 
   @Test
