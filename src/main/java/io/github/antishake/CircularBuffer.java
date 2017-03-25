@@ -1,41 +1,59 @@
 package io.github.antishake;
 
-
-// Dummy class to integrate with Circular buffer
-// Will be removed once circular buffer implementation is in place
+/**
+ * Created by Geofe on 3/22/17.
+ */
+/*
+ Created a  circular buffer class
+    add fn will add the elements to the circular buffer
+        -will maintain read pointer when updating with latest values
+        -will maintain write pointer when updating with the latest values
+ */
 public class CircularBuffer {
+  private int readPointer, writePointer = 0;
+  private int sizeBuffer;
+  private Coordinate[] circularbuffer;
+  private boolean bufferFullOnce = false;
 
-  public CircularBuffer(int nO_OF_SAMPLES) {
-    // TODO Auto-generated constructor stub
+  public CircularBuffer(int size) {
+    sizeBuffer = size;
+    circularbuffer = new Coordinate[sizeBuffer];
   }
 
-  public int getReadPointer() {
-    // TODO Auto-generated method stub
-    return 0;
+
+  public boolean isEmpty() {
+    return readPointer == writePointer;
+  }
+
+  public void add(Coordinate element) {
+    if (writePointer < sizeBuffer) {
+      if (!bufferFullOnce) {
+        circularbuffer[writePointer] = element;
+        writePointer++;
+      } else {
+        circularbuffer[readPointer] = element;
+        writePointer++;
+        readPointer++;
+      }
+    } else {
+      writePointer = 0;
+      circularbuffer[writePointer] = element;
+      writePointer++;
+      readPointer = readPointer + 2;
+      bufferFullOnce = true;
+    }
   }
 
   public Coordinate[] getElements() {
-    // TODO Auto-generated method stub
-    Coordinate[] testResponseArray = new Coordinate[]{
-      new Coordinate(3d, 3d, 3d),
-      new Coordinate(8d, 8d, 8d),
-      new Coordinate(11d, 11d, 11d),
-      new Coordinate(9d, 9d, 9d),
-      new Coordinate(7d, 7d, 7d),
-      new Coordinate(3d, 3d, 3d),
-      new Coordinate(1d, 1d, 1d)
-    };
-    return testResponseArray;
+    return circularbuffer;
+  }
+
+  public int getReadPointer() {
+    return readPointer;
   }
 
   public int getWritePointer() {
-    // TODO Auto-generated method stub
-    return 0;
+    return writePointer;
   }
-
-  public void add(Coordinate coordinate) {
-    // TODO Auto-generated method stub
-
-  }
-
 }
+
