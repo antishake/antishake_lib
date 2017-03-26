@@ -3,8 +3,6 @@ package io.github.antishake;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * Created by Geofe on 3/22/17.
@@ -25,7 +23,7 @@ public class CircularBuffer {
     this.size = maxSize;
     this.buffer = new ArrayList<>(maxSize);
     for (int i = 0; i < maxSize; i++) {
-      this.buffer.add(null);
+      this.buffer.add(new Coordinate(0, 0, 0));
     }
   }
 
