@@ -338,7 +338,8 @@ public class AntiShake {
    * @return latestAccelerometerDataIndex
    */
   private int getLatestAccelerometerDataIndex() {
-    latestAccelerometerDataIndex = getCircularBuffer().getWritePointer();
+    int wp = getCircularBuffer().getWritePointer();
+    latestAccelerometerDataIndex = wp == 0 ? NO_OF_SAMPLES - 1 : wp - 1;
     return latestAccelerometerDataIndex;
   }
 
