@@ -91,6 +91,8 @@ public class AntiShake {
       tune();
       //send data through motionCorrectionListener
       motionCorrectionListener.onTranslationVectorReceived(getTunedResponseSamples());
+    } else {
+      motionCorrectionListener.onDeviceSteady();
     }
   }
 

@@ -10,7 +10,7 @@ import java.util.Arrays;
 /**
  * Created by ruraj on 3/1/17.
  */
-public class AntiShakeTest implements MotionCorrectionListener {
+public class AntiShakeTest {
 
   private static AntiShake antiShakeImpl;
 
@@ -161,11 +161,5 @@ public class AntiShakeTest implements MotionCorrectionListener {
     double time = 0.02;
     double impulseResponse = time * Math.exp(-(time * Math.sqrt(AntiShake.SPRING_CONSTANT)));
     Assert.assertEquals(impulseResponse, antiShakeImpl.calculateImplulseResponse(time), 0.0001);
-  }
-
-  @Override
-  public void onTranslationVectorReceived(ArrayList<Coordinate> responseSamples) {
-    // TODO Auto-generated method stub
-
   }
 }
