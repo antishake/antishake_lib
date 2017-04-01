@@ -1,9 +1,11 @@
 package io.github.antishake;
 
+import java.io.Serializable;
+
 /**
  * Created by ruraj on 3/1/17.
  */
-public class Coordinate {
+public class Coordinate implements Serializable {
   private double x;
   private double y;
   private double z;
@@ -54,5 +56,10 @@ public class Coordinate {
   @Override
   public int hashCode() {
     return Double.valueOf(getX()).hashCode() + Double.valueOf(getY()).hashCode() + Double.valueOf(getZ()).hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "(" + getX() + "," + getY() + "," + getZ() + ")";
   }
 }
