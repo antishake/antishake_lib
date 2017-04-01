@@ -322,7 +322,7 @@ public class AntiShake {
       accelerometerValues = new ArrayList<Coordinate>();
     }
     accelerometerValues.clear();
-    accelerometerValues.addAll(Arrays.asList(getCircularBuffer().toArray()));
+    accelerometerValues.addAll(getCircularBuffer().getList());
     return accelerometerValues;
   }
 
