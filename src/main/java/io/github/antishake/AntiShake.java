@@ -30,6 +30,8 @@ public class AntiShake {
   private static int NO_OF_SAMPLES_SHAKE_DETECTION;
   // To tune the convolution output.
   static double TUNE_CONVOLVE_OUTPUT;
+  private boolean wasShaking;
+
   private ArrayList<Double> impulseResponseSamples;
   private ArrayList<Coordinate> accelerometerValues;
   private ArrayList<Coordinate> responseSamples, tunedResponseSamples;
@@ -87,11 +89,13 @@ public class AntiShake {
    */
   private void calculateTransformationVector() {
     if (isShaking()) {
+      wasShaking = true;
       convolve();
       tune();
       //send data through motionCorrectionListener
       motionCorrectionListener.onTranslationVectorReceived(getTunedResponseSamples());
-    } else {
+    } else if (wasShaking) {
+      wasShaking = false;
       motionCorrectionListener.onDeviceSteady();
     }
   }
