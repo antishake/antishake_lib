@@ -232,7 +232,7 @@ public class AntiShake {
     if (impulseResponseSamples == null || accelerometerValues == null) {
       return;
     }
-    if (accelerometerValues.isEmpty() || impulseResponseSamples.size() != accelerometerValues.size()) {
+    if (accelerometerValues.isEmpty() /*|| impulseResponseSamples.size() != accelerometerValues.size()*/) {
       return;
     }
 
