@@ -71,9 +71,10 @@ public class CircularBuffer {
     return writePtr;
   }
 
-  public Coordinate[] toArray() {
-    Coordinate[] array = new Coordinate[buffer.size()];
-    return buffer.toArray(array);
+  public ArrayList<Coordinate> getList() {
+//    Coordinate[] array = new Coordinate[buffer.size()];
+//    return buffer.toArray(array);
+    return buffer;
   }
 }
 
