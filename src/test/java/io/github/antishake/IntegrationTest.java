@@ -23,7 +23,7 @@ public class IntegrationTest {
 
   @BeforeClass
   public static void setup() throws URISyntaxException, FileNotFoundException {
-    antiShake = new AntiShake(motionCorrectionListener);
+    antiShake = new AntiShake(motionCorrectionListener,null);
 
     testFileReader = new BufferedReader(
       new FileReader(
