@@ -1,13 +1,11 @@
 package io.github.antishake;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
@@ -17,19 +15,33 @@ import java.util.ArrayList;
 public class IntegrationTest {
   private static AntiShake antiShake;
   private static BufferedReader testFileReader;
+  private static FileWriter vectFileWriter;
+
+  private static ArrayList<Coordinate> vectRows = new ArrayList<>();
+  private static int vectRowIdx;
 
   private static boolean isShaking;
   private static int steadyCount;
 
   @BeforeClass
-  public static void setup() throws URISyntaxException, FileNotFoundException {
-    antiShake = new AntiShake(motionCorrectionListener,null);
+  public static void setup() throws URISyntaxException, IOException {
+    antiShake = new AntiShake(motionCorrectionListener, null);
 
     testFileReader = new BufferedReader(
       new FileReader(
         IntegrationTest.class.getClassLoader().getResource("testdata.csv").toURI().getPath()
       )
     );
+
+    File vectFile = new File("vect.csv");
+    vectFile.delete();
+    vectFileWriter = new FileWriter(vectFile);
+  }
+
+  @AfterClass
+  public static void cleanUp() throws IOException {
+    testFileReader.close();
+    vectFileWriter.close();
   }
 
   @Test
@@ -43,7 +55,16 @@ public class IntegrationTest {
       antiShake.calculateTransformationVector(coord.getX(), coord.getY(), coord.getZ());
     }
 
-    Assert.assertEquals("Number of steady states are not equal", 6, steadyCount);
+    Assert.assertEquals("Number of steady states are not equal", 4, steadyCount);
+
+    for (Coordinate vectRow : vectRows) {
+      write(vectFileWriter, vectRow);
+    }
+  }
+
+  private void write(FileWriter writer, Coordinate coordinate) throws IOException {
+    writer.write(coordinate.getX() + "," + coordinate.getY() + "," + coordinate.getZ() + "\n");
+    writer.flush();
   }
 
   private Coordinate strToCoord(String str) {
@@ -57,7 +78,8 @@ public class IntegrationTest {
     @Override
     public void onTranslationVectorReceived(ArrayList<Coordinate> responseSamples) {
       isShaking = true;
-      System.out.println("Received translation vectors of size: " + responseSamples.size());
+      vectRows.removeAll(vectRows.subList(vectRowIdx, vectRows.size()));
+      vectRows.addAll(vectRowIdx++, responseSamples);
     }
 
     @Override
