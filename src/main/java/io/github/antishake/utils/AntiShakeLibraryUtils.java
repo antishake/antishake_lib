@@ -1,4 +1,4 @@
-package io.github.utils;
+package io.github.antishake.utils;
 
 import java.util.Properties;
 

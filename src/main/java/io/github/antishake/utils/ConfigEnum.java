@@ -1,4 +1,4 @@
-package io.github.utils;
+package io.github.antishake.utils;
 
 /**
  * Created by Saranya Shanmugam on 4/5/2017.

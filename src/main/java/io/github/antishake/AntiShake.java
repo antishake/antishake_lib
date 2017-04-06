@@ -3,8 +3,8 @@ package io.github.antishake;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import io.github.utils.AntiShakeLibraryUtils;
-import io.github.utils.ConfigEnum;
+import io.github.antishake.utils.AntiShakeLibraryUtils;
+import io.github.antishake.utils.ConfigEnum;
 
 /**
  * Created by ruraj on 2/19/17.
