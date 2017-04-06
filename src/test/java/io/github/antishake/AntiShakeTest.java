@@ -21,7 +21,7 @@ public class AntiShakeTest {
 
   @Test
   public void testIsShaking() {
-    AntiShake.SHAKE_DETECTION_THRESHOLD = 10;
+    antiShakeImpl.SHAKE_DETECTION_THRESHOLD = 10;
     ArrayList<Coordinate> accelerometerValues = new ArrayList<Coordinate>();
     Coordinate[] accelerometerArrayShake = new Coordinate[]{
       new Coordinate(3d, 3d, 1d),
@@ -136,20 +136,20 @@ public class AntiShakeTest {
 
     ArrayList<Coordinate> expectedTunedResponseSamples = new ArrayList<Coordinate>();
     Coordinate[] expectedTunedResponseArray = new Coordinate[]{
-      new Coordinate(3d * AntiShake.TUNE_CONVOLVE_OUTPUT, 3d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-        3d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-      new Coordinate(8d * AntiShake.TUNE_CONVOLVE_OUTPUT, 8d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-        8d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-      new Coordinate(11d * AntiShake.TUNE_CONVOLVE_OUTPUT, 11d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-        11d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-      new Coordinate(9d * AntiShake.TUNE_CONVOLVE_OUTPUT, 9d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-        9d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-      new Coordinate(7d * AntiShake.TUNE_CONVOLVE_OUTPUT, 7d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-        7d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-      new Coordinate(3d * AntiShake.TUNE_CONVOLVE_OUTPUT, 3d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-        3d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-      new Coordinate(1d * AntiShake.TUNE_CONVOLVE_OUTPUT, 1d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-        1d * AntiShake.TUNE_CONVOLVE_OUTPUT)};
+      new Coordinate(3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(8d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 8d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        8d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(11d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 11d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        11d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(9d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 9d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        9d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(7d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 7d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        7d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(1d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 1d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        1d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT)};
     expectedTunedResponseSamples.addAll(Arrays.asList(expectedTunedResponseArray));
 
     antiShakeImpl.tune(convolvedResponseSamples);
@@ -159,7 +159,7 @@ public class AntiShakeTest {
   @Test
   public void testCalculateImplulseResponse() {
     double time = 0.02;
-    double impulseResponse = time * Math.exp(-(time * Math.sqrt(AntiShake.SPRING_CONSTANT)));
+    double impulseResponse = time * Math.exp(-(time * Math.sqrt(antiShakeImpl.SPRING_CONSTANT)));
     Assert.assertEquals(impulseResponse, antiShakeImpl.calculateImplulseResponse(time), 0.0001);
   }
 }
