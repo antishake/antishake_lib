@@ -13,7 +13,7 @@ public class AntiShake {
 
 //  private final static Logger logger = Logger.getLogger(AntiShake.class);
 
-  double SPRING_CONSTANT;
+   double SPRING_CONSTANT;
   // Number of seconds that the circular buffer should have the latest data
   private double CIRCULAR_BUFFER_IN_SEC;
   // Sampling rate to get the accelerometer data
