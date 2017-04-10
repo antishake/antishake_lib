@@ -1,41 +1,80 @@
 package io.github.antishake;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-// Dummy class to integrate with Circular buffer
-// Will be removed once circular buffer implementation is in place
+import java.util.ArrayList;
+
+/**
+ * Created by Geofe on 3/22/17.
+ */
+/*
+ Created a  circular buffer class
+    add fn will add the elements to the circular buffer
+        -will maintain read pointer when updating with latest values
+        -will maintain write pointer when updating with the latest values
+ */
 public class CircularBuffer {
+  private int readPtr;
+  private int writePtr;
+  private ArrayList<Coordinate> buffer;
+  private int size;
 
-  public CircularBuffer(int nO_OF_SAMPLES) {
-    // TODO Auto-generated constructor stub
+  public CircularBuffer(int maxSize) {
+    this.size = maxSize;
+    this.buffer = new ArrayList<>(maxSize);
+    for (int i = 0; i < maxSize; i++) {
+      this.buffer.add(new Coordinate(0, 0, 0));
+    }
+  }
+
+  /**
+   * Add a coordinate to the buffer
+   */
+
+  public void add(Coordinate value) {
+    this.buffer.set(this.writePtr, value);
+    this.writePtr = ((this.writePtr + 1) % this.size);
+
+    if (this.readPtr == this.writePtr) {
+      this.readPtr = ((this.readPtr + 1) % this.size);
+    }
+  }
+
+  public Coordinate read() {
+    if (this.readPtr == this.writePtr) {
+      return null;
+    }
+    Coordinate res = this.buffer.get(this.readPtr);
+    this.readPtr = ((this.readPtr + 1) % this.size);
+    return res;
+  }
+
+  public Coordinate[] readLatest(int len) {
+    throw new NotImplementedException();
+  }
+
+  public Coordinate[] readAll() {
+    ArrayList<Coordinate> res = new ArrayList<>();
+    Coordinate coord;
+    while ((coord = read()) != null) {
+      res.add(coord);
+    }
+    Coordinate[] arr = new Coordinate[res.size()];
+    return res.toArray(arr);
   }
 
   public int getReadPointer() {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
-  public Coordinate[] getElements() {
-    // TODO Auto-generated method stub
-    Coordinate[] testResponseArray = new Coordinate[]{
-      new Coordinate(3d, 3d, 3d),
-      new Coordinate(8d, 8d, 8d),
-      new Coordinate(11d, 11d, 11d),
-      new Coordinate(9d, 9d, 9d),
-      new Coordinate(7d, 7d, 7d),
-      new Coordinate(3d, 3d, 3d),
-      new Coordinate(1d, 1d, 1d)
-    };
-    return testResponseArray;
+    return readPtr;
   }
 
   public int getWritePointer() {
-    // TODO Auto-generated method stub
-    return 0;
+    return writePtr;
   }
 
-  public void add(Coordinate coordinate) {
-    // TODO Auto-generated method stub
-
+  public ArrayList<Coordinate> getList() {
+//    Coordinate[] array = new Coordinate[buffer.size()];
+//    return buffer.toArray(array);
+    return buffer;
   }
-
 }
+

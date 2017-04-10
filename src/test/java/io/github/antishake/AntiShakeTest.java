@@ -1,6 +1,8 @@
 package io.github.antishake;
 
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +10,7 @@ import java.util.Arrays;
 /**
  * Created by ruraj on 3/1/17.
  */
-public class AntiShakeTest implements MotionCorrectionListener {
+public class AntiShakeTest {
 
   private static AntiShake antiShakeImpl;
 
@@ -19,7 +21,7 @@ public class AntiShakeTest implements MotionCorrectionListener {
 
   @Test
   public void testIsShaking() {
-    AntiShake.SHAKE_DETECTION_THRESHOLD = 10;
+    antiShakeImpl.SHAKE_DETECTION_THRESHOLD = 10;
     ArrayList<Coordinate> accelerometerValues = new ArrayList<Coordinate>();
     Coordinate[] accelerometerArrayShake = new Coordinate[]{
       new Coordinate(3d, 3d, 1d),
@@ -97,45 +99,67 @@ public class AntiShakeTest implements MotionCorrectionListener {
   }
 
   @Test
-	public void testTune() {
-		ArrayList<Coordinate> convolvedResponseSamples = new ArrayList<Coordinate>();
-		Coordinate[] convolvedResponseArray = new Coordinate[] { new Coordinate(3d, 3d, 3d), new Coordinate(8d, 8d, 8d),
-				new Coordinate(11d, 11d, 11d), new Coordinate(9d, 9d, 9d), new Coordinate(7d, 7d, 7d),
-				new Coordinate(3d, 3d, 3d), new Coordinate(1d, 1d, 1d) };
-		convolvedResponseSamples.addAll(Arrays.asList(convolvedResponseArray));
+  public void testCircularBuffer() {
+    CircularBuffer cb = new CircularBuffer(201);
+    // Let's see if write pointer is working fine before the whole buffer is full
+    Coordinate element = new Coordinate(2, 5, 7);
+    cb.add(element);
+    Assert.assertEquals(1, cb.getWritePointer());
+    Assert.assertEquals(0, cb.getReadPointer());
 
-		ArrayList<Coordinate> expectedTunedResponseSamples = new ArrayList<Coordinate>();
-		Coordinate[] expectedTunedResponseArray = new Coordinate[] {
-				new Coordinate(3d * AntiShake.TUNE_CONVOLVE_OUTPUT, 3d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-						3d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-				new Coordinate(8d * AntiShake.TUNE_CONVOLVE_OUTPUT, 8d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-						8d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-				new Coordinate(11d * AntiShake.TUNE_CONVOLVE_OUTPUT, 11d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-						11d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-				new Coordinate(9d * AntiShake.TUNE_CONVOLVE_OUTPUT, 9d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-						9d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-				new Coordinate(7d * AntiShake.TUNE_CONVOLVE_OUTPUT, 7d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-						7d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-				new Coordinate(3d * AntiShake.TUNE_CONVOLVE_OUTPUT, 3d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-						3d * AntiShake.TUNE_CONVOLVE_OUTPUT),
-				new Coordinate(1d * AntiShake.TUNE_CONVOLVE_OUTPUT, 1d * AntiShake.TUNE_CONVOLVE_OUTPUT,
-						1d * AntiShake.TUNE_CONVOLVE_OUTPUT) };
-		expectedTunedResponseSamples.addAll(Arrays.asList(expectedTunedResponseArray));
-		
-		antiShakeImpl.tune(convolvedResponseSamples);
-	    Assert.assertEquals(expectedTunedResponseSamples, antiShakeImpl.getTunedResponseSamples());
-	}
+    //when the buffer exceeds 201 values it should return to initial position of the block and  should start from there read pointer should move according to write pointer
+    for (int i = 0; i < 356; i++) {
+      cb.add(element);
+    }
+    Assert.assertEquals(156, cb.getWritePointer());
+    Assert.assertEquals(157, cb.getReadPointer());
+
+    // Let's read a few elements and see if read pointer changes correctly
+    for (int i = 0; i < 5; i++) {
+      cb.read();
+    }
+    Assert.assertEquals(162, cb.getReadPointer());
+
+    // Say I read everything off of it, the read pointer should go from
+    // where it was to... where write pointer is.
+    cb.readAll();
+    Assert.assertEquals(cb.getWritePointer(), cb.getReadPointer());
+  }
+
+  @Test
+  public void testTune() {
+    ArrayList<Coordinate> convolvedResponseSamples = new ArrayList<Coordinate>();
+    Coordinate[] convolvedResponseArray = new Coordinate[]{new Coordinate(3d, 3d, 3d), new Coordinate(8d, 8d, 8d),
+      new Coordinate(11d, 11d, 11d), new Coordinate(9d, 9d, 9d), new Coordinate(7d, 7d, 7d),
+      new Coordinate(3d, 3d, 3d), new Coordinate(1d, 1d, 1d)};
+    convolvedResponseSamples.addAll(Arrays.asList(convolvedResponseArray));
+
+    ArrayList<Coordinate> expectedTunedResponseSamples = new ArrayList<Coordinate>();
+    Coordinate[] expectedTunedResponseArray = new Coordinate[]{
+      new Coordinate(3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(8d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 8d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        8d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(11d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 11d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        11d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(9d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 9d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        9d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(7d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 7d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        7d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        3d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT),
+      new Coordinate(1d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT, 1d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT,
+        1d * antiShakeImpl.TUNE_CONVOLVE_OUTPUT)};
+    expectedTunedResponseSamples.addAll(Arrays.asList(expectedTunedResponseArray));
+
+    antiShakeImpl.tune(convolvedResponseSamples);
+    Assert.assertEquals(expectedTunedResponseSamples, antiShakeImpl.getTunedResponseSamples());
+  }
 
   @Test
   public void testCalculateImplulseResponse() {
     double time = 0.02;
-    double impulseResponse = time * Math.exp(-(time * Math.sqrt(AntiShake.SPRING_CONSTANT)));
+    double impulseResponse = time * Math.exp(-(time * Math.sqrt(antiShakeImpl.SPRING_CONSTANT)));
     Assert.assertEquals(impulseResponse, antiShakeImpl.calculateImplulseResponse(time), 0.0001);
   }
-
-@Override
-public void onTranslationVectorReceived(ArrayList<Coordinate> responseSamples) {
-	// TODO Auto-generated method stub
-	
-}
 }

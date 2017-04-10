@@ -9,4 +9,6 @@ public interface MotionCorrectionListener {
 //  void onTranslationVectorReceived(float x, float y);
 
   void onTranslationVectorReceived(ArrayList<Coordinate> responseSamples);
+
+  void onDeviceSteady();
 }

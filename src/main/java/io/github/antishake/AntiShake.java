@@ -1,37 +1,37 @@
 package io.github.antishake;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import io.github.antishake.utils.AntiShakeLibraryUtils;
+import io.github.antishake.utils.ConfigEnum;
 
 /**
  * Created by ruraj on 2/19/17.
  */
 public class AntiShake {
 
-  private final static Logger logger = Logger.getLogger(AntiShake.class);
+//  private final static Logger logger = Logger.getLogger(AntiShake.class);
 
-  private static Properties properties;
-  static double SPRING_CONSTANT;
+  double SPRING_CONSTANT;
   // Number of seconds that the circular buffer should have the latest data
-  private static double CIRCULAR_BUFFER_IN_SEC;
+  private double CIRCULAR_BUFFER_IN_SEC;
   // Sampling rate to get the accelerometer data
-  private static double SAMPLING_RATE_IN_HZ;
+  private double SAMPLING_RATE_IN_HZ;
   // Calculated based on CIRCULAR_BUFFER_IN_SEC and SAMPLING_RATE_IN_HZ
   static int NO_OF_SAMPLES;
   // Threshold to compare for shake detection
-  static double SHAKE_DETECTION_THRESHOLD;
+  double SHAKE_DETECTION_THRESHOLD;
   // To check the shake detection, number of seconds that the latest data should be considered from circular buffer
-  private static double SHAKE_DETECTION_CHECK_TIME_IN_SEC;
+  private double SHAKE_DETECTION_CHECK_TIME_IN_SEC;
   // Calculated based on SHAKE_DETECTION_CHECK_TIME_IN_SEC * SAMPLING_RATE_IN_HZ
   private static int NO_OF_SAMPLES_SHAKE_DETECTION;
   // To tune the convolution output.
-  static double TUNE_CONVOLVE_OUTPUT;
+  double TUNE_CONVOLVE_OUTPUT;
+
+  private boolean wasShaking;
+  private Properties properties;
+
   private ArrayList<Double> impulseResponseSamples;
   private ArrayList<Coordinate> accelerometerValues;
   private ArrayList<Coordinate> responseSamples, tunedResponseSamples;
@@ -39,37 +39,24 @@ public class AntiShake {
   private CircularBuffer circularBuffer;
   private MotionCorrectionListener motionCorrectionListener;
 
-  // To load the config.properties when the class is loaded
-  static {
-    InputStream is = null;
-    try {
-      properties = new Properties();
-      is = ClassLoader.class.getResourceAsStream("/config.properties");
-      properties.load(is);
-      loadProperties();
-    } catch (FileNotFoundException e) {
-      logger.error(e);
-    } catch (IOException e) {
-      logger.error(e);
-    }
-  }
-
-  public AntiShake(MotionCorrectionListener listener) {
+  public AntiShake(MotionCorrectionListener listener, Properties properties) {
+    this.properties = properties;
     this.motionCorrectionListener = listener;
+    loadProperties();
 
     // As impulse response of Spring-Mass-Damper system is constant for the given SPRING_CONSTANT, we calculate only once while AntiShake object creation.
     calculateImplulseResponse();
   }
 
   // This constructor is not exposed with public access
-  // Used only for testing
   AntiShake() {
-
+    loadProperties();
   }
 
   /**
    * Gets called by the client application with accelerometer values
    * to calculate transformation vector
+   * TODO Make this function use Coordinate instead
    *
    * @param xAxisValue
    * @param yAxisValue
@@ -87,10 +74,14 @@ public class AntiShake {
    */
   private void calculateTransformationVector() {
     if (isShaking()) {
+      wasShaking = true;
       convolve();
       tune();
       //send data through motionCorrectionListener
       motionCorrectionListener.onTranslationVectorReceived(getTunedResponseSamples());
+    } else if (wasShaking) {
+      wasShaking = false;
+      motionCorrectionListener.onDeviceSteady();
     }
   }
 
@@ -109,7 +100,8 @@ public class AntiShake {
    * @param convolvedResponseSamples
    */
   void tune(ArrayList<Coordinate> convolvedResponseSamples) {
-    if (convolvedResponseSamples == null || convolvedResponseSamples.isEmpty()) return;
+    if (convolvedResponseSamples == null || convolvedResponseSamples.isEmpty())
+      return;
 
     getTunedResponseSamples().clear();
     double tunedResponseSampleX, tunedResponseSampleY, tunedResponseSampleZ;
@@ -229,7 +221,7 @@ public class AntiShake {
     if (impulseResponseSamples == null || accelerometerValues == null) {
       return;
     }
-    if (accelerometerValues.isEmpty() || impulseResponseSamples.size() != accelerometerValues.size()) {
+    if (accelerometerValues.isEmpty() /*|| impulseResponseSamples.size() != accelerometerValues.size()*/) {
       return;
     }
 
@@ -237,7 +229,8 @@ public class AntiShake {
 
     int earliestAccelerometerDataIndex = getEarliestAccelerometerDataIndex();
 
-    if (earliestAccelerometerDataIndex >= NO_OF_SAMPLES) return; // index should be 0 to 200 in this testing case
+    if (earliestAccelerometerDataIndex >= NO_OF_SAMPLES)
+      return; // index should be 0 to 200 in this testing case
 
     double xResponseValue, yResponseValue, zResponseValue;
 
@@ -256,28 +249,18 @@ public class AntiShake {
   }
 
   /**
-   * Returns the value of the given key from the config.properties file
-   *
-   * @param key
-   * @return value
-   */
-  private static String getPropertyValue(String key) {
-    return properties.getProperty(key);
-  }
-
-  /**
    * Loads all the properties from config.properties file and assigns to
    * appropriate static variables
    */
-  private static void loadProperties() {
-    SPRING_CONSTANT = Double.parseDouble(getPropertyValue("SPRING_CONSTANT"));
-    CIRCULAR_BUFFER_IN_SEC = Double.parseDouble(getPropertyValue("CIRCULAR_BUFFER_IN_SEC"));
-    SAMPLING_RATE_IN_HZ = Double.parseDouble(getPropertyValue("SAMPLING_RATE_IN_HZ"));
+  private void loadProperties() {
+    SPRING_CONSTANT = AntiShakeLibraryUtils.getPropertyValue(ConfigEnum.SPRING_CONSTANT, properties);
+    CIRCULAR_BUFFER_IN_SEC = AntiShakeLibraryUtils.getPropertyValue(ConfigEnum.CIRCULAR_BUFFER_IN_SEC, properties);
+    SAMPLING_RATE_IN_HZ = AntiShakeLibraryUtils.getPropertyValue(ConfigEnum.SAMPLING_RATE_IN_HZ, properties);
     NO_OF_SAMPLES = (int) (CIRCULAR_BUFFER_IN_SEC * SAMPLING_RATE_IN_HZ) + 1; // Extra sample for the value at time 0
-    SHAKE_DETECTION_THRESHOLD = Double.parseDouble(getPropertyValue("SHAKE_DETECTION_THRESHOLD"));
-    SHAKE_DETECTION_CHECK_TIME_IN_SEC = Double.parseDouble(getPropertyValue("SHAKE_DETECTION_CHECK_TIME_IN_SEC"));
+    SHAKE_DETECTION_THRESHOLD = AntiShakeLibraryUtils.getPropertyValue(ConfigEnum.SHAKE_DETECTION_THRESHOLD, properties);
+    SHAKE_DETECTION_CHECK_TIME_IN_SEC = AntiShakeLibraryUtils.getPropertyValue(ConfigEnum.SHAKE_DETECTION_CHECK_TIME_IN_SEC, properties);
     NO_OF_SAMPLES_SHAKE_DETECTION = (int) (SHAKE_DETECTION_CHECK_TIME_IN_SEC * SAMPLING_RATE_IN_HZ);
-    TUNE_CONVOLVE_OUTPUT = Double.parseDouble(getPropertyValue("TUNE_CONVOLVE_OUTPUT"));
+    TUNE_CONVOLVE_OUTPUT = AntiShakeLibraryUtils.getPropertyValue(ConfigEnum.TUNE_CONVOLVE_OUTPUT, properties);
   }
 
   /**
@@ -313,7 +296,7 @@ public class AntiShake {
       accelerometerValues = new ArrayList<Coordinate>();
     }
     accelerometerValues.clear();
-    accelerometerValues.addAll(Arrays.asList(getCircularBuffer().getElements()));
+    accelerometerValues.addAll(getCircularBuffer().getList());
     return accelerometerValues;
   }
 
@@ -331,7 +314,8 @@ public class AntiShake {
    * @return latestAccelerometerDataIndex
    */
   private int getLatestAccelerometerDataIndex() {
-    latestAccelerometerDataIndex = getCircularBuffer().getWritePointer();
+    int wp = getCircularBuffer().getWritePointer();
+    latestAccelerometerDataIndex = wp == 0 ? NO_OF_SAMPLES - 1 : wp - 1;
     return latestAccelerometerDataIndex;
   }
 
@@ -367,5 +351,12 @@ public class AntiShake {
    */
   void setTunedResponseSamples(ArrayList<Coordinate> tunedResponseSamples) {
     this.tunedResponseSamples = tunedResponseSamples;
+  }
+
+  /**
+   * @return properties
+   */
+  public Properties getProperties() {
+    return properties;
   }
 }
