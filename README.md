@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/antishake/antishake_lib.svg?branch=master)](https://travis-ci.org/antishake/antishake_lib)
+
 # Antishake_lib
 Anti-shake library is a project to develop a standard library for mobile application which Stabilizes content for Shaking Screens. Henceforth Anti-shake library can be integrated with any application without the need to rewrite applications to stabilize the screen 
 
