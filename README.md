@@ -13,8 +13,8 @@ To use  Anti-shake library functionality use ``` import io.github.antishake ```
 
 # Import antishake_lib into Third party android application
 
-Download the latest release of antishake_lib.jar file from 'releases' under 'Code' tab in GitHub
-Place the antishake_lib.jar in the 'libs' directory under 'apps' in the android application
+Download the latest release of antishake_lib.jar file from 'releases' under 'Code' tab in GitHub.
+Place the antishake_lib.jar in the 'libs' directory under 'apps' in the android application.
 Add the dependencies in build.gradle file under 'apps' directory as
  compile fileTree(include: ['*.jar'], dir: 'libs')
 
