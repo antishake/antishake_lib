@@ -1,6 +1,7 @@
 package io.github.antishake;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import io.github.antishake.utils.AntiShakeLibraryUtils;
@@ -39,6 +40,50 @@ public class AntiShake {
   private CircularBuffer circularBuffer;
   private MotionCorrectionListener motionCorrectionListener;
 
+  /**
+   * A background thread for running calculations.
+   */
+  private final WorkerThread workerThread = new WorkerThread();
+
+  private class WorkerThread extends Thread {
+    private final List<Coordinate> queue = new ArrayList<>();
+    private boolean end;
+
+    private void setValues(double xAxisValue, double yAxisValue, double zAxisValue) {
+      synchronized (queue) {
+        queue.add(new Coordinate(xAxisValue, yAxisValue, zAxisValue));
+        queue.notify();
+      }
+    }
+
+    @Override
+    public void run() {
+      // Wait till "queue is empty" AND "end is here"
+      while (!(end && queue.isEmpty())) {
+        synchronized (queue) {
+          if (queue.isEmpty()) {
+            try {
+              queue.wait();
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
+          }
+          while (!queue.isEmpty()) {
+            getCircularBuffer().add(queue.remove(0));
+            calculateTransformationVector();
+          }
+        }
+      }
+    }
+
+    public void end() {
+      end = true;
+      synchronized (queue) {
+        queue.notify();
+      }
+    }
+  };
+
   public AntiShake(MotionCorrectionListener listener, Properties properties) {
     this.properties = properties;
     this.motionCorrectionListener = listener;
@@ -46,6 +91,7 @@ public class AntiShake {
 
     // As impulse response of Spring-Mass-Damper system is constant for the given SPRING_CONSTANT, we calculate only once while AntiShake object creation.
     calculateImplulseResponse();
+    workerThread.start();
   }
 
   // This constructor is not exposed with public access
@@ -63,8 +109,8 @@ public class AntiShake {
    * @param zAxisValue
    */
   public void calculateTransformationVector(double xAxisValue, double yAxisValue, double zAxisValue) {
-    getCircularBuffer().add(new Coordinate(xAxisValue, yAxisValue, zAxisValue));
-    calculateTransformationVector();
+    // Send new values for worker thread to work on
+    workerThread.setValues(xAxisValue, yAxisValue, zAxisValue);
   }
 
   /**
@@ -358,5 +404,21 @@ public class AntiShake {
    */
   public Properties getProperties() {
     return properties;
+  }
+
+  /**
+   * Wait for the background thread to stop.
+   */
+  void join() throws InterruptedException {
+    if (workerThread.isAlive()) {
+      workerThread.join();
+    }
+  }
+
+  /**
+   * Stop running the background thread.
+   */
+  public void end() {
+    workerThread.end();
   }
 }

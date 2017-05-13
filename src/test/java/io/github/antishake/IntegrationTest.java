@@ -20,7 +20,6 @@ public class IntegrationTest {
   private static ArrayList<Coordinate> vectRows = new ArrayList<>();
   private static int vectRowIdx;
 
-  private static boolean isShaking;
   private static int steadyCount;
 
   @BeforeClass
@@ -45,7 +44,7 @@ public class IntegrationTest {
   }
 
   @Test
-  public void testLibraryIntegrity() throws IOException {
+  public void testLibraryIntegrity() throws IOException, InterruptedException {
     String line;
     // Ignore the first heading line
     testFileReader.readLine();
@@ -54,6 +53,12 @@ public class IntegrationTest {
       Coordinate coord = strToCoord(line);
       antiShake.calculateTransformationVector(coord.getX(), coord.getY(), coord.getZ());
     }
+
+    // Mark end of operations
+    antiShake.end();
+
+    // Wait for thread to stop (so that results represent final values)
+    antiShake.join();
 
     Assert.assertEquals("Number of steady states are not equal", 4, steadyCount);
 
@@ -77,17 +82,13 @@ public class IntegrationTest {
   private static MotionCorrectionListener motionCorrectionListener = new MotionCorrectionListener() {
     @Override
     public void onTranslationVectorReceived(ArrayList<Coordinate> responseSamples) {
-      isShaking = true;
       vectRows.removeAll(vectRows.subList(vectRowIdx, vectRows.size()));
       vectRows.addAll(vectRowIdx++, responseSamples);
     }
 
     @Override
     public void onDeviceSteady() {
-      if (isShaking) {
-        steadyCount++;
-        isShaking = false;
-      }
+      steadyCount++;
     }
   };
 }
