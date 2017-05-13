@@ -13,7 +13,7 @@ public class AntiShake {
 
 //  private final static Logger logger = Logger.getLogger(AntiShake.class);
 
-  double SPRING_CONSTANT;
+   double SPRING_CONSTANT;
   // Number of seconds that the circular buffer should have the latest data
   private double CIRCULAR_BUFFER_IN_SEC;
   // Sampling rate to get the accelerometer data
@@ -146,9 +146,9 @@ public class AntiShake {
     double aggregateX = 0, aggregateY = 0, aggregateZ = 0;
     for (int i = 0; i < NO_OF_SAMPLES_SHAKE_DETECTION; i++) {
       accelerometerValue = accelerometerValues.get(tempLatestAccelerometerDataIndex);
-      aggregateX += accelerometerValue.getX();
-      aggregateY += accelerometerValue.getY();
-      aggregateZ += accelerometerValue.getZ();
+      aggregateX += Math.abs(accelerometerValue.getX());
+      aggregateY += Math.abs(accelerometerValue.getY());
+      aggregateZ += Math.abs(accelerometerValue.getZ());
       if (aggregateX > SHAKE_DETECTION_THRESHOLD || aggregateY > SHAKE_DETECTION_THRESHOLD
         || aggregateZ > SHAKE_DETECTION_THRESHOLD) {
         shakeDetected = true;
